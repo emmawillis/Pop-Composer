@@ -7,25 +7,29 @@ from keras.callbacks import ModelCheckpoint
 from os import listdir
 from os.path import isfile, join
 
-path = "./Pop_Music_Midi"
-files = [join(path, f) for f in listdir(path) if isfile(join(path, f))]
 sequence_length = 40 #100
 DEBUG = True
 
-def process_data():
-    notes, maxNotes, minNotes, meanNotes = get_notes()
+def get_note_encodings(path):
+    notes, maxNotes, minNotes, meanNotes = get_notes(path)
 
-    if DEBUG: print("\nRESULTS:\nThere are an average of " + str(meanNotes) + " notes per song. The min number of notes is " + str(minNotes) + " and the max is " + str(maxNotes) + ".")
-    if DEBUG: print("Setting sequence length to " + str(sequence_length))
-
-    n_vocab = len(set(notes))
+    distinct_notes = len(set(notes))
 
     note_values = sorted(set(item for item in notes))
 
-    notes_as_ints = dict((note, number) for number, note in enumerate(note_values))
+    encodingDict = dict((note, number) for number, note in enumerate(note_values))
+    decodingDict = {v: k for k, v in encodingDict.items()}
     
-    if DEBUG: print ("There are " + str(n_vocab) + " distinct notes in the training dataset, with dictionary mappings: ")
-    if DEBUG: print (notes_as_ints)
+    if DEBUG: print ("There are " + str(distinct_notes) + " distinct notes in the training dataset, with dictionary mappings: ")
+    if DEBUG: print (encodingDict)
+
+    return (distinct_notes, encodingDict, decodingDict)
+
+def process_data(path, distinct_notes, encodingDict):
+    notes, maxNotes, minNotes, meanNotes = get_notes(path)
+    
+    if DEBUG: print("\nRESULTS:\nThere are an average of " + str(meanNotes) + " notes per song. The min number of notes is " + str(minNotes) + " and the max is " + str(maxNotes) + ".")
+    if DEBUG: print("Setting sequence length to " + str(sequence_length))
 
     training_Xs = []
     training_Ys = []
@@ -33,24 +37,26 @@ def process_data():
     for i in range(len(notes) - sequence_length):
         sequence_xs = notes[i: i + sequence_length] #note 0 to 39 of first song = input
         sequence_y = notes[i + sequence_length] #note 40 = output 
-        training_Xs.append([notes_as_ints[char] for char in sequence_xs])
-        training_Ys.append(notes_as_ints[sequence_y])
+        training_Xs.append([encodingDict[char] for char in sequence_xs])
+        training_Ys.append(encodingDict[sequence_y])
 
     num_patterns = len(training_Xs)
     if DEBUG: print("Using sequence length of " + str(sequence_length) + ", " + str(num_patterns) + " input-output pairs were generated.")
     # reshape the input into a format compatible with LSTM layers
     training_Xs = numpy.reshape(training_Xs, (num_patterns, sequence_length, 1))
-    if DEBUG: print("Example training sample before normalization: \ninput: \n" + str(training_Xs[0]) + "\noutput:\n " + str(training_Ys[0]))
+    # if DEBUG: print("Example training sample before normalization: \ninput: \n" + str(training_Xs[0]) + "\noutput:\n " + str(training_Ys[0]))
     
     # normalize input
-    training_Xs = training_Xs / float(n_vocab)
+    training_Xs = training_Xs / float(distinct_notes)
     training_Ys = np_utils.to_categorical(training_Ys)
-    if DEBUG: print("Example training sample after normalization: \ninput: \n" + str(training_Xs[0]) + "\noutput:\n " + str(training_Ys[0]))
+    # if DEBUG: print("Example training sample after normalization: \ninput: \n" + str(training_Xs[0]) + "\noutput:\n " + str(training_Ys[0]))
 
-    return (notes_as_ints, training_Xs, training_Ys)
+    return (training_Xs, training_Ys)
 
 
-def get_notes(): #this function was written by Sigurður Skúli
+def get_notes(path): #this function was written by Sigurður Skúli
+    files = [join(path, f) for f in listdir(path) if isfile(join(path, f))]
+
     """ Get all the notes and chords from the midi files in the ./midi_songs directory """
     notes = []
     notes_per_song = []
@@ -58,7 +64,7 @@ def get_notes(): #this function was written by Sigurður Skúli
     for file in files:
         midi = converter.parse(file)
 
-        if DEBUG: print("Parsing %s" % file)
+        # if DEBUG: print("Parsing %s" % file)
 
         notes_to_parse = None
 
@@ -121,11 +127,3 @@ def create_midi(prediction_output): #this function was written by Sigurður Skú
 
     midi_stream.write('midi', fp='test_output.midi')
 
-if __name__ == '__main__':
-    encodingDict, inputs, outputs = process_data()
-    decodingDict = {v: k for k, v in encodingDict.items()} #inversion of encoding map
-
-    #This is just to test if encoding arrays back to MIDI works:
-    ys = [one_hot_to_int(y) for y in outputs]
-    ys = ys[0:100] #just using the output note (y value) for the first 100 training sequences as a test sequence
-    vector_to_MIDI(ys, decodingDict) #check test_output.midi for result
