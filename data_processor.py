@@ -8,7 +8,7 @@ from os import listdir
 from os.path import isfile, join
 
 sequence_length = 40 #100
-DEBUG = True
+DEBUG = False
 
 def get_note_encodings(path):
     notes, maxNotes, minNotes, meanNotes = get_notes(path)
@@ -48,7 +48,7 @@ def process_data(path, distinct_notes, encodingDict):
     
     # normalize input
     training_Xs = training_Xs / float(distinct_notes)
-    training_Ys = np_utils.to_categorical(training_Ys)
+    training_Ys = np_utils.to_categorical(training_Ys, num_classes = distinct_notes)
     # if DEBUG: print("Example training sample after normalization: \ninput: \n" + str(training_Xs[0]) + "\noutput:\n " + str(training_Ys[0]))
 
     return (training_Xs, training_Ys)

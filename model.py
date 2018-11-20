@@ -41,14 +41,12 @@ def train(model, trainXs, trainYs, epochs=200):
 
 def test(model, testXs, testYs):
     loss = model.evaluate(testXs, testYs)
-    print("loss on test:") #TODO remove
-    print(loss) #TODO remove
+    print("Loss on test: " + str(loss))
 
 
 if __name__ == '__main__':
 
     if (len(sys.argv) == 1 or sys.argv[1].lower() == 'generate' or sys.argv[1].lower() == 'gen'):
-        #????
         print("idk") #TODO write generate code!!
         # vector_to_MIDI(ys, decodingDict) #check test_output.midi for result
 
@@ -73,10 +71,11 @@ if __name__ == '__main__':
 
     elif (sys.argv[1].lower() == 'test'):
         if (not os.path.isfile(MODEL_FILE)):
-            print('Test Error: model not found. Please run training to generate weights in ' + MODEL_FILE)
+            print('Test Error: model not found. Please run training (model.py train) to generate weights in ' + MODEL_FILE)
+
         model = keras.models.load_model(MODEL_FILE)
         distinct_notes, encodingDict, decodingDict = get_note_encodings(ALL_PATH)
         testXs, testYs = process_data(TEST_PATH, distinct_notes, encodingDict)
-        
+
         test(model, testXs, testYs)
 
