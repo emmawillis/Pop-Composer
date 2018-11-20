@@ -1,25 +1,25 @@
 # Pop-Composer
 
-To train from scratch:
+## H2 To train from scratch:
 
 python model.py retrain 100
 = train for 100 epochs (can leave off epoch number to use default of 200 epochs)
 
 ******************************************************************************************
 
-To train starting from most recently saved weights (saved in weights.hdf5):
+## H2To train starting from most recently saved weights (saved in weights.hdf5):
 
 python model.py train 100
 
 ******************************************************************************************
 
-To evaluate on test data:
+## H2To evaluate on test data:
 
 python model.py test
 
 ******************************************************************************************
 
-To generate a song: (coming soon)
+## H2To generate a song: (coming soon)
 
 python model.py generate 500
 
