@@ -2,12 +2,10 @@
 from music21 import converter, instrument, note, chord, stream
 import numpy
 from keras.utils import np_utils
-from keras.callbacks import ModelCheckpoint
 
 from os import listdir
 from os.path import isfile, join
 
-sequence_length = 40 #100
 DEBUG = False
 
 def get_note_encodings(path):
@@ -25,7 +23,7 @@ def get_note_encodings(path):
 
     return (distinct_notes, encodingDict, decodingDict)
 
-def process_data(path, distinct_notes, encodingDict):
+def process_data(path, distinct_notes, encodingDict, sequence_length):
     notes, maxNotes, minNotes, meanNotes = get_notes(path)
     
     if DEBUG: print("\nRESULTS:\nThere are an average of " + str(meanNotes) + " notes per song. The min number of notes is " + str(minNotes) + " and the max is " + str(maxNotes) + ".")
