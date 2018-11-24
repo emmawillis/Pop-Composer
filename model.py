@@ -1,4 +1,4 @@
-from data_processor import get_note_encodings, process_data, vector_to_MIDI, one_hot_to_int
+from data_processor import load_dict, get_encoding_dict, get_decoding_dict, process_data, vector_to_MIDI, one_hot_to_int, create_midi
 import keras
 from keras.models import Sequential
 from keras.layers import Dense
@@ -50,9 +50,8 @@ def test(model, testXs, testYs):
 def generate(model, seed_sequence, distinct_notes, length):
     sequence = seed_sequence
     output = []
-
+    
     for i in range(length):
-        print(sequence) #TODO IT ALWAYS RETURNS 71?????!
         resized_sequence = np.reshape(sequence, (1, SEQUENCE_LENGTH, 1))
         resized_sequence = resized_sequence / float(distinct_notes)
         predicted_note_vector = model.predict(resized_sequence)
@@ -61,6 +60,7 @@ def generate(model, seed_sequence, distinct_notes, length):
         sequence.append(predicted_note)
         output.append(predicted_note)
     return output
+
 
 def get_random_seed(encodingDict): #TODO maybe don't use random??
     sequence = []
@@ -80,9 +80,12 @@ if __name__ == '__main__':
             print('Generate Error: model not found. Please run training (model.py train) to generate weights in ' + MODEL_FILE)
 
         model = keras.models.load_model(MODEL_FILE)
-        distinct_notes, encodingDict, decodingDict = get_note_encodings(ALL_PATH)
+        encodingDict = load_dict()
+        decodingDict = get_decoding_dict(encodingDict)
+        distinct_notes = len(encodingDict)
 
-        seed_sequence = get_random_seed(encodingDict)
+        seed_sequence = get_random_seed(encodingDict) #temp TODO
+        print("seed sequence: ", seed_sequence)
         output = generate(model, seed_sequence, distinct_notes, song_length)
         print("Generated song: ", [decodingDict[char] for char in output])
         print("Song stored in test_output.midi.")
@@ -93,14 +96,16 @@ if __name__ == '__main__':
         if (len(sys.argv) >= 3):
             epochs = int(sys.argv[2])
 
-        distinct_notes, encodingDict, decodingDict = get_note_encodings(ALL_PATH)
-        trainXs, trainYs = process_data(TRAIN_PATH, distinct_notes, encodingDict, SEQUENCE_LENGTH)
-        
         model = None
-        if (sys.argv[1].lower() == 'retrain' or not os.path.isfile(MODEL_FILE)):        
+        if (sys.argv[1].lower() == 'retrain' or not os.path.isfile(MODEL_FILE)):
+            distinct_notes, encodingDict = get_encoding_dict(ALL_PATH)
+            trainXs, trainYs = process_data(TRAIN_PATH, distinct_notes, encodingDict, SEQUENCE_LENGTH)
             model = get_model(trainXs, distinct_notes)
             print(model.summary())
         else:
+            encodingDict = load_dict()
+            distinct_notes = len(encodingDict)
+            trainXs, trainYs = process_data(TRAIN_PATH, distinct_notes, encodingDict, SEQUENCE_LENGTH)
             model = keras.models.load_model(MODEL_FILE)
             print(model.summary())
 
@@ -115,7 +120,8 @@ if __name__ == '__main__':
 
         model = keras.models.load_model(MODEL_FILE)
         print(model.summary())
-        distinct_notes, encodingDict, decodingDict = get_note_encodings(ALL_PATH)
+        encodingDict = load_dict()
+        distinct_notes = len(encodingDict)
         testXs, testYs = process_data(TEST_PATH, distinct_notes, encodingDict, SEQUENCE_LENGTH)
  
         test(model, testXs, testYs)

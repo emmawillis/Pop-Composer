@@ -6,9 +6,23 @@ from keras.utils import np_utils
 from os import listdir
 from os.path import isfile, join
 
+import pickle
+
 DEBUG = False
 
-def get_note_encodings(path):
+def save_dict(obj):
+    with open("note_dict.pkl", 'wb') as f:
+        pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+
+def load_dict():
+    with open("note_dict.pkl", 'rb') as f:
+        return pickle.load(f)
+
+def get_decoding_dict(encodingDict):
+    return {v: k for k, v in encodingDict.items()}
+
+def get_encoding_dict(path):
+    if DEBUG: print("Loading notes from all files:")
     notes, maxNotes, minNotes, meanNotes = get_notes(path)
 
     distinct_notes = len(set(notes))
@@ -16,12 +30,13 @@ def get_note_encodings(path):
     note_values = sorted(set(item for item in notes))
 
     encodingDict = dict((note, number) for number, note in enumerate(note_values))
-    decodingDict = {v: k for k, v in encodingDict.items()}
     
     if DEBUG: print ("There are " + str(distinct_notes) + " distinct notes in the training dataset, with dictionary mappings: ")
     if DEBUG: print (encodingDict)
 
-    return (distinct_notes, encodingDict, decodingDict)
+    save_dict(encodingDict)
+
+    return (distinct_notes, encodingDict)
 
 def process_data(path, distinct_notes, encodingDict, sequence_length):
     notes, maxNotes, minNotes, meanNotes = get_notes(path)
@@ -41,13 +56,10 @@ def process_data(path, distinct_notes, encodingDict, sequence_length):
     num_patterns = len(training_Xs)
     if DEBUG: print("Using sequence length of " + str(sequence_length) + ", " + str(num_patterns) + " input-output pairs were generated.")
     # reshape the input into a format compatible with LSTM layers
-    training_Xs = numpy.reshape(training_Xs, (num_patterns, sequence_length, 1))
-    # if DEBUG: print("Example training sample before normalization: \ninput: \n" + str(training_Xs[0]) + "\noutput:\n " + str(training_Ys[0]))
-    
+    training_Xs = numpy.reshape(training_Xs, (num_patterns, sequence_length, 1))    
     # normalize input
     training_Xs = training_Xs / float(distinct_notes)
     training_Ys = np_utils.to_categorical(training_Ys, num_classes = distinct_notes)
-    # if DEBUG: print("Example training sample after normalization: \ninput: \n" + str(training_Xs[0]) + "\noutput:\n " + str(training_Ys[0]))
 
     return (training_Xs, training_Ys)
 
@@ -62,7 +74,7 @@ def get_notes(path): #this function was written by Sigurður Skúli
     for file in files:
         midi = converter.parse(file)
 
-        # if DEBUG: print("Parsing %s" % file)
+        if DEBUG: print("Parsing %s" % file)
 
         notes_to_parse = None
 
@@ -79,8 +91,8 @@ def get_notes(path): #this function was written by Sigurður Skúli
                 notes.append(str(element.pitch))
             elif isinstance(element, chord.Chord):
                 notes.append('.'.join(str(n) for n in element.normalOrder))
-        
-    
+
+
     return (notes, max(notes_per_song), min(notes_per_song), int(numpy.mean(notes_per_song)))
 
 
