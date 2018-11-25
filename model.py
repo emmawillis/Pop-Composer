@@ -79,7 +79,7 @@ if __name__ == '__main__':
         if (not os.path.isfile(MODEL_FILE)):
             print('Generate Error: model not found. Please run training (model.py train) to generate weights in ' + MODEL_FILE)
 
-        model = keras.models.load_model(MODEL_FILE)
+        model = keras.models.load_model(MODEL_FILE) 
         encodingDict = load_dict()
         decodingDict = get_decoding_dict(encodingDict)
         distinct_notes = len(encodingDict)

@@ -30,3 +30,6 @@ or just python model.py
 = default length song
 
 ****************************************************************************************
+## Notes:
+
+This code requires Python 3.6, Keras 2.2.4, and Music21
