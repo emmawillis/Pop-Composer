@@ -7,6 +7,7 @@ from keras.layers import LSTM
 from keras.layers import Activation
 from keras.utils import np_utils
 
+import matplotlib.pyplot as plt
 from scipy.spatial import distance
 import numpy as np
 import os.path
@@ -105,7 +106,12 @@ if __name__ == '__main__':
 
         trainXs, trainYs = process_data(TRAIN_PATH, distinct_notes, encodingDict, SEQUENCE_LENGTH)
         closest, dist = closest_in_training(output[0:40], trainXs, distinct_notes)
-        print("Most similar training song", closest, "\nDistance", dist)
+        plt.plot(closest, color="blue", label='Closest Training Song = Blue, distance = ' + str(dist))
+        plt.plot(output[0:40], color="orange", label='Generated Song = Orange')
+
+        plt.ylabel('Value In Dictionary')
+        plt.xlabel('Position in sequence')
+        plt.show()
 
     elif (sys.argv[1].lower() == 'train' or sys.argv[1].lower() == 'retrain'):
         epochs = None
