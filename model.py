@@ -27,12 +27,12 @@ def get_model(inputs, num_classes): #model from Sigurður Skúli
         input_shape=(inputs.shape[1], inputs.shape[2]),
         return_sequences=True
     ))
-    model.add(Dropout(0.3))
+    model.add(Dropout(0.5))
     model.add(LSTM(512, return_sequences=True))
-    model.add(Dropout(0.3))
+    model.add(Dropout(0.5))
     model.add(LSTM(512))
     model.add(Dense(256))
-    model.add(Dropout(0.3))
+    model.add(Dropout(0.5))
     model.add(Dense(num_classes))
     model.add(Activation('softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
@@ -69,6 +69,17 @@ def get_random_seed(encodingDict): #TODO maybe don't use random??
     
     return sequence
 
+def closest_in_training(output_sequence, training_Xs, distinct_notes):
+    closest = None
+    min_dist = None
+    for x_sequence in training_Xs:
+        curr_dist = distance.euclidean(x_sequence*distinct_notes, output_sequence)
+        if min_dist == None or curr_dist < min_dist:
+            min_dist = curr_dist
+            closest = x_sequence*distinct_notes
+    
+    return closes, min_dist
+
 if __name__ == '__main__':
 
     if (len(sys.argv) == 1 or sys.argv[1].lower() == 'generate' or sys.argv[1].lower() == 'gen'):
@@ -90,6 +101,9 @@ if __name__ == '__main__':
         print("Generated song: ", [decodingDict[char] for char in output])
         print("Song stored in test_output.midi.")
         vector_to_MIDI(output, decodingDict)
+
+        closest, dist = closest_in_training(output_sequence, training_Xs, distinct_notes)
+        print("Most similar training song", closest, "Distance", dist)
 
     elif (sys.argv[1].lower() == 'train' or sys.argv[1].lower() == 'retrain'):
         epochs = None
