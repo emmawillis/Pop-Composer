@@ -7,6 +7,7 @@ from keras.layers import LSTM
 from keras.layers import Activation
 from keras.utils import np_utils
 
+from scipy.spatial import distance
 import numpy as np
 import os.path
 import sys
@@ -27,12 +28,12 @@ def get_model(inputs, num_classes): #model from Sigurður Skúli
         input_shape=(inputs.shape[1], inputs.shape[2]),
         return_sequences=True
     ))
-    model.add(Dropout(0.5))
+    model.add(Dropout(0.3))
     model.add(LSTM(512, return_sequences=True))
-    model.add(Dropout(0.5))
+    model.add(Dropout(0.3))
     model.add(LSTM(512))
     model.add(Dense(256))
-    model.add(Dropout(0.5))
+    model.add(Dropout(0.))
     model.add(Dense(num_classes))
     model.add(Activation('softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
@@ -78,7 +79,7 @@ def closest_in_training(output_sequence, training_Xs, distinct_notes):
             min_dist = curr_dist
             closest = x_sequence*distinct_notes
     
-    return closes, min_dist
+    return closest, min_dist
 
 if __name__ == '__main__':
 
@@ -95,15 +96,16 @@ if __name__ == '__main__':
         decodingDict = get_decoding_dict(encodingDict)
         distinct_notes = len(encodingDict)
 
-        seed_sequence = get_random_seed(encodingDict) #temp TODO
+        seed_sequence = get_random_seed(encodingDict)
         print("seed sequence: ", seed_sequence)
         output = generate(model, seed_sequence, distinct_notes, song_length)
         print("Generated song: ", [decodingDict[char] for char in output])
         print("Song stored in test_output.midi.")
         vector_to_MIDI(output, decodingDict)
 
-        closest, dist = closest_in_training(output_sequence, training_Xs, distinct_notes)
-        print("Most similar training song", closest, "Distance", dist)
+        trainXs, trainYs = process_data(TRAIN_PATH, distinct_notes, encodingDict, SEQUENCE_LENGTH)
+        closest, dist = closest_in_training(output[0:40], trainXs, distinct_notes)
+        print("Most similar training song", closest, "\nDistance", dist)
 
     elif (sys.argv[1].lower() == 'train' or sys.argv[1].lower() == 'retrain'):
         epochs = None
