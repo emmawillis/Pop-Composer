@@ -111,6 +111,7 @@ if __name__ == '__main__':
 
         plt.ylabel('Value In Dictionary')
         plt.xlabel('Position in sequence')
+        plt.legend()
         plt.show()
 
     elif (sys.argv[1].lower() == 'train' or sys.argv[1].lower() == 'retrain'):
