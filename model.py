@@ -71,17 +71,6 @@ def get_random_seed(encodingDict): #TODO maybe don't use random??
     
     return sequence
 
-def closest_in_training(output_sequence, training_Xs, distinct_notes):
-    closest = None
-    min_dist = None
-    for x_sequence in training_Xs:
-        curr_dist = distance.euclidean(x_sequence*distinct_notes, output_sequence)
-        if min_dist == None or curr_dist < min_dist:
-            min_dist = curr_dist
-            closest = x_sequence*distinct_notes
-    
-    return closest, min_dist
-
 if __name__ == '__main__':
 
     if (len(sys.argv) == 1 or sys.argv[1].lower() == 'generate' or sys.argv[1].lower() == 'gen'):
@@ -103,16 +92,6 @@ if __name__ == '__main__':
         print("Generated song: ", [decodingDict[char] for char in output])
         print("Song stored in test_output.midi.")
         vector_to_MIDI(output, decodingDict)
-
-        trainXs, trainYs = process_data(TRAIN_PATH, distinct_notes, encodingDict, SEQUENCE_LENGTH)
-        closest, dist = closest_in_training(output[0:40], trainXs, distinct_notes)
-        plt.plot(closest, color="blue", label='Closest Training Song = Blue, distance = ' + str(dist))
-        plt.plot(output[0:40], color="orange", label='Generated Song = Orange')
-
-        plt.ylabel('Value In Dictionary')
-        plt.xlabel('Position in sequence')
-        plt.legend()
-        plt.show()
 
     elif (sys.argv[1].lower() == 'train' or sys.argv[1].lower() == 'retrain'):
         epochs = None
