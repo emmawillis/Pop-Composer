@@ -20,14 +20,13 @@ python model.py test
 
 ****************************************************************************************
 
-## To generate a song: (coming soon)
+## To generate a song:
 
-python model.py generate 500  
+python model.py generate  
 
-= generate 500 notes using most recently saved weights
+= generate 100 note song using most recently saved weights
 
 or just python model.py  
-= default length song
 
 ****************************************************************************************
 ## Notes:
